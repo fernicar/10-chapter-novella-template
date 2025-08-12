@@ -1,3 +1,14 @@
+<video controls>
+  <source src="videos/10ChapterNovellaTemplateConvertedToBook.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<video controls>
+  <source src="videos/10_pages_for_dog_story.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+
 # Run and deploy your AI Studio app
 
 This contains everything you need to run your app locally.
