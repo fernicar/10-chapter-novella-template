@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10-Chapter Novella Template</title>
+  <link rel="stylesheet" href="index.css">
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^0.7.0"
+  }
+}
+</script>
+  <!-- Add Google Fonts Link -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+  <div class="container">
+    <div class="input-section">
+      <div class="input-section-header">
+        <label for="topicInput" id="topicLabel"></label>
+        <div class="header-controls">
+          <button id="downloadStoryButton" class="toggle-button" aria-label="Download current story" disabled>
+            <span class="download-icon">💾</span> <span class="download-text">Download</span>
+          </button>
+          <div class="checkbox-container">
+            <input type="checkbox" id="debugModeCheckbox" name="debugMode">
+            <label for="debugModeCheckbox">View Template</label>
+          </div>
+          <div class="checkbox-container">
+            <input type="checkbox" id="debugCoverCheckbox" name="debugCover" checked>
+            <label for="debugCoverCheckbox">Cat Cover</label>
+          </div>
+          <button id="toggleInputSectionButton" class="toggle-button" aria-expanded="true" aria-controls="collapsibleControls">
+            <span class="toggle-icon">▲</span> <span class="toggle-text">Collapse</span>
+          </button>
+        </div>
+      </div>
+      <div id="collapsibleControls" class="collapsible-controls">
+        <textarea
+          id="topicInput"
+          aria-labelledby="topicLabel"
+          placeholder="Enter a topic for your 10-Chapter Novella Template."
+        ></textarea>
+        <button id="generateButton">Generate</button>
+      </div>
+    </div>
+    <div id="errorMessage" class="error-message" aria-live="polite"></div>
+    <div id="pagesContainer" class="pages-container" aria-label="Generated pages stack">
+      <!-- Pages will be generated here -->
+    </div>
+  </div>
+  <script type="module" src="index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
