@@ -67,6 +67,27 @@ let allPages: Page[] = [];
 let activeBackCoverImageBase64: string | null = null; // Stores base64 of debug_cover.jpg if currentDebugCover is true
 let lastRawBookContent: BookContent | null = null; // Stores the raw book content from API before debug cover override
 
+// Function to update book container centering based on turned pages
+function updateBookCentering() {
+  const turnedCount = currentPageIndex;
+  const totalPages = allPages.length;
+  const bookWidth = 330; // From CSS: .book-viewer { width: 330px; }
+
+  let translateX = 0;
+  if (turnedCount === 0) {
+    // Fully closed at the start.
+    translateX = -330/2;
+  } else if (turnedCount === totalPages) {
+    // Fully closed at the end. Shift container right to re-center the flipped book.
+    translateX = bookWidth/2;
+  } else {
+    // Book is open. Shift right by half-width to center the spread.
+    translateX = 0;
+  }
+
+  pagesContainer.style.transform = `translateX(${translateX}px)`;
+}
+
 // Loading overlay functions
 function showLoadingOverlay(text: string, subtext: string = '') {
   loadingText.textContent = text;
@@ -318,6 +339,7 @@ function handleTurnBackInteraction(
   }
   
   currentPageIndex = pageIndexOfThisBack;
+  updateBookCentering();
 
   if (errorMessage.textContent?.startsWith('End of book!')) {
     errorMessage.textContent = '';
@@ -367,6 +389,7 @@ function handleFaceInteraction(
   }
 
   currentPageIndex++;
+  updateBookCentering();
   if (currentPageIndex < totalPages) {
     const nextFrontSegment = pageElements[currentPageIndex];
     nextFrontSegment.classList.add('current');
@@ -509,6 +532,7 @@ function renderPages() {
   if (pageElements.length > 0) {
      pageElements[0].focus();
      currentPageIndex = 0;
+     updateBookCentering();
   }
 }
 
