@@ -495,6 +495,7 @@ Chapter 10: Resolution - Wrap up any loose ends of the story.\nShow the protagon
 
     const storyPrompt = `Generate a compelling short story about "${topic}".
 The story MUST have a title and EXACTLY 10 distinct chapters.
+Each chapter must have a 'chapterNumber' (integer, 1 through 10) and its 'text' (string).
 The story must follow the 10-chapter novella structure detailed below:
 ${tenChapterTemplateGuide}
 Ensure the narrative is coherent, engaging, and follows a clear plot progression according to the 10-chapter template.`;
