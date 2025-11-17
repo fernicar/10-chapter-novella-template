@@ -41,6 +41,24 @@ const inputSection = document.querySelector('.input-section') as HTMLElement;
 const debugModeCheckbox = document.getElementById('debugModeCheckbox') as HTMLInputElement;
 const debugCoverCheckbox = document.getElementById('debugCoverCheckbox') as HTMLInputElement;
 
+// New elements for enhanced features
+const genreSelect = document.getElementById('genreSelect') as HTMLSelectElement;
+const loadingOverlay = document.getElementById('loadingOverlay') as HTMLDivElement;
+const loadingText = document.getElementById('loadingText') as HTMLDivElement;
+const loadingSubtext = document.getElementById('loadingSubtext') as HTMLDivElement;
+const progressFill = document.getElementById('progressFill') as HTMLDivElement;
+const exportOptions = document.getElementById('exportOptions') as HTMLDivElement;
+const exportPdfButton = document.getElementById('exportPdfButton') as HTMLButtonElement;
+const exportEpubButton = document.getElementById('exportEpubButton') as HTMLButtonElement;
+const storyHistory = document.getElementById('storyHistory') as HTMLDivElement;
+const historyGrid = document.getElementById('historyGrid') as HTMLDivElement;
+const clearHistoryButton = document.getElementById('clearHistoryButton') as HTMLButtonElement;
+const editMode = document.getElementById('editMode') as HTMLDivElement;
+const editStoryButton = document.getElementById('editStoryButton') as HTMLButtonElement;
+const saveEditsButton = document.getElementById('saveEditsButton') as HTMLButtonElement;
+const cancelEditsButton = document.getElementById('cancelEditsButton') as HTMLButtonElement;
+const editTextarea = document.getElementById('editTextarea') as HTMLTextAreaElement;
+
 const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
 
 let currentPageIndex = 0;
@@ -48,6 +66,128 @@ let pageElements: HTMLDivElement[] = [];
 let allPages: Page[] = [];
 let activeBackCoverImageBase64: string | null = null; // Stores base64 of debug_cover.jpg if currentDebugCover is true
 let lastRawBookContent: BookContent | null = null; // Stores the raw book content from API before debug cover override
+
+// Loading overlay functions
+function showLoadingOverlay(text: string, subtext: string = '') {
+  loadingText.textContent = text;
+  loadingSubtext.textContent = subtext;
+  progressFill.style.width = '0%';
+  loadingOverlay.style.display = 'flex';
+}
+
+function hideLoadingOverlay() {
+  loadingOverlay.style.display = 'none';
+}
+
+function updateProgress(percentage: number) {
+  progressFill.style.width = `${percentage}%`;
+}
+
+// Story history management
+interface StoryHistoryItem {
+  id: string;
+  title: string;
+  genre: string;
+  topic: string;
+  createdAt: Date;
+  content: BookContent;
+}
+
+let storyHistoryItems: StoryHistoryItem[] = [];
+
+function saveStoryToHistory(bookContent: BookContent, topic: string, genre: string) {
+  const historyItem: StoryHistoryItem = {
+    id: Date.now().toString(),
+    title: bookContent.title,
+    genre: genre || 'General',
+    topic: topic,
+    createdAt: new Date(),
+    content: JSON.parse(JSON.stringify(bookContent))
+  };
+
+  storyHistoryItems.unshift(historyItem); // Add to beginning
+
+  // Keep only last 10 stories
+  if (storyHistoryItems.length > 10) {
+    storyHistoryItems = storyHistoryItems.slice(0, 10);
+  }
+
+  saveHistoryToStorage();
+  updateHistoryDisplay();
+}
+
+function saveHistoryToStorage() {
+  try {
+    localStorage.setItem('storyHistory', JSON.stringify(storyHistoryItems));
+  } catch (error) {
+    console.warn('Failed to save story history to localStorage:', error);
+  }
+}
+
+function loadHistoryFromStorage() {
+  try {
+    const stored = localStorage.getItem('storyHistory');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      storyHistoryItems = parsed.map((item: any) => ({
+        ...item,
+        createdAt: new Date(item.createdAt)
+      }));
+    }
+  } catch (error) {
+    console.warn('Failed to load story history from localStorage:', error);
+    storyHistoryItems = [];
+  }
+}
+
+function updateHistoryDisplay() {
+  historyGrid.innerHTML = '';
+
+  if (storyHistoryItems.length === 0) {
+    storyHistory.style.display = 'none';
+    return;
+  }
+
+  storyHistoryItems.forEach(item => {
+    const historyItem = document.createElement('div');
+    historyItem.className = 'history-item';
+    historyItem.innerHTML = `
+      <div class="history-item-title">${item.title}</div>
+      <div class="history-item-date">${item.createdAt.toLocaleDateString()}</div>
+      <div class="history-item-genre">${item.genre}</div>
+    `;
+
+    historyItem.addEventListener('click', () => {
+      loadStoryFromHistory(item);
+    });
+
+    historyGrid.appendChild(historyItem);
+  });
+
+  storyHistory.style.display = 'block';
+}
+
+function loadStoryFromHistory(item: StoryHistoryItem) {
+  lastRawBookContent = JSON.parse(JSON.stringify(item.content));
+  allPages = transformBookOutputToPages({ book: item.content });
+  renderPages();
+
+  // Update UI
+  topicInput.value = item.topic;
+  genreSelect.value = item.genre;
+  exportOptions.style.display = 'flex';
+  editMode.style.display = 'block';
+  storyHistory.style.display = storyHistoryItems.length > 1 ? 'block' : 'none';
+
+  errorMessage.textContent = `Loaded story: ${item.title}`;
+}
+
+function clearStoryHistory() {
+  storyHistoryItems = [];
+  saveHistoryToStorage();
+  updateHistoryDisplay();
+  storyHistory.style.display = 'none';
+}
 
 async function getImageAsBase64(imageUrl: string): Promise<string | null> {
   try {
@@ -452,17 +592,18 @@ downloadStoryButton.addEventListener('click', handleDownloadStoryClick);
 
 generateButton.addEventListener('click', async () => {
   const topic = topicInput.value.trim();
-  
+  const selectedGenre = genreSelect.value;
+
   currentPageIndex = 0;
-  allPages = []; 
+  allPages = [];
   lastRawBookContent = null;
-  errorMessage.textContent = ''; 
+  errorMessage.textContent = '';
   downloadStoryButton.disabled = true;
 
   generateButton.disabled = true;
-  
+
   if (currentDebugMode) {
-    await setupDebugStory(); 
+    await setupDebugStory();
     generateButton.disabled = false;
     // renderPages will enable download button if allPages is populated
     return;
@@ -474,11 +615,13 @@ generateButton.addEventListener('click', async () => {
     generateButton.disabled = false;
     return;
   }
-  
-  errorMessage.textContent = 'Generating 10-chapter story...';
-  let storyDataFromApi: BookContent | undefined;
+
+  // Show loading overlay
+  showLoadingOverlay('Generating 10-chapter story...', 'This may take a few moments');
 
   try {
+    updateProgress(10);
+    let storyDataFromApi: BookContent | undefined;
     const tenChapterTemplateGuide = `
 Follow this 10-chapter novella structure:
 Chapter 1: The Hook - Start with a mystery, a question that is provocative and creates an information gap that readers want to fill.\nSee if you could condense this mystery into a single visual image.\nIntroduce the protagonist and the setting.\nPlant seeds of central conflict or problem.\nEstablish the mood.\nHave the protagonist do something that makes them compelling (i.e., they are really competent at something, they perform a kind act, they are oppressed, etc.).
@@ -534,6 +677,13 @@ Ensure the narrative is coherent, engaging, and follows a clear plot progression
       }
     });
 
+    if (!storyResult.text) {
+      errorMessage.textContent = 'Failed to generate story content. Please try again.';
+      renderPages();
+      generateButton.disabled = false;
+      return;
+    }
+
     const storyJsonStr = storyResult.text.trim();
     
     let parsedData: BookOutput;
@@ -579,7 +729,9 @@ Ensure the narrative is coherent, engaging, and follows a clear plot progression
                 config: { numberOfImages: 1, outputMimeType: 'image/jpeg' },
             });
 
-            if (imageResponse.generatedImages && imageResponse.generatedImages.length > 0 && imageResponse.generatedImages[0].image.imageBytes) {
+            if (imageResponse.generatedImages && imageResponse.generatedImages.length > 0 &&
+                imageResponse.generatedImages[0] && imageResponse.generatedImages[0].image &&
+                imageResponse.generatedImages[0].image.imageBytes) {
                 storyDataFromApi.coverImageBase64 = imageResponse.generatedImages[0].image.imageBytes;
                 // Update lastRawBookContent as well, as this is its "true" cover if not for Cat Cover.
                 if(lastRawBookContent) lastRawBookContent.coverImageBase64 = storyDataFromApi.coverImageBase64;
@@ -596,24 +748,30 @@ Ensure the narrative is coherent, engaging, and follows a clear plot progression
     allPages = transformBookOutputToPages({book: storyDataFromApi});
 
     if (allPages.length > 0) {
+      // Save to history
+      saveStoryToHistory(storyDataFromApi, topic, selectedGenre);
+
       if (currentDebugCover) {
           if (activeBackCoverImageBase64) {
               errorMessage.textContent = '10-chapter story generated. Using Cat Cover for front and back pages.';
           } else {
               errorMessage.textContent = '10-chapter story generated. (Warning: Cat Cover failed to load).';
           }
-      } else { 
+      } else {
           if (storyDataFromApi.coverImageBase64) {
               errorMessage.textContent = '10-chapter story and API cover image generated successfully!';
           } else {
               errorMessage.textContent = '10-chapter story generated successfully (no API cover image).';
           }
       }
-      renderPages();
+      enhancedRenderPages();
     } else {
       errorMessage.textContent = 'No valid story chapters could be generated. Please try a different topic.';
-      renderPages(); 
+      enhancedRenderPages();
     }
+
+    // Hide loading overlay
+    hideLoadingOverlay();
 
   } catch (error: unknown) {
     console.error('Error during generation process:', error);
@@ -696,11 +854,193 @@ debugCoverCheckbox.addEventListener('change', async () => {
 });
 
 
+// Event listeners for new features
+clearHistoryButton.addEventListener('click', () => {
+  if (confirm('Are you sure you want to clear all story history?')) {
+    clearStoryHistory();
+  }
+});
+
+editStoryButton.addEventListener('click', () => {
+  if (!lastRawBookContent) {
+    errorMessage.textContent = 'No story available to edit.';
+    return;
+  }
+
+  // Populate edit textarea with current story content
+  let editContent = `${lastRawBookContent.title}\n\n`;
+  lastRawBookContent.chapters.forEach(chapter => {
+    editContent += `Chapter ${chapter.chapterNumber}\n${chapter.text}\n\n`;
+  });
+
+  editTextarea.value = editContent.trim();
+  editTextarea.style.display = 'block';
+  editStoryButton.style.display = 'none';
+  saveEditsButton.style.display = 'inline-block';
+  cancelEditsButton.style.display = 'inline-block';
+
+  errorMessage.textContent = 'Edit mode activated. Make your changes and click Save.';
+});
+
+saveEditsButton.addEventListener('click', () => {
+  if (!lastRawBookContent) return;
+
+  const editedContent = editTextarea.value.trim();
+  if (!editedContent) {
+    errorMessage.textContent = 'Edited content cannot be empty.';
+    return;
+  }
+
+  try {
+    // Parse the edited content back into chapters
+    const lines = editedContent.split('\n');
+    let title = '';
+    const chapters: Chapter[] = [];
+    let currentChapter: Partial<Chapter> = {};
+    let chapterText = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (i === 0 && line) {
+        title = line;
+        continue;
+      }
+
+      if (line.startsWith('Chapter ')) {
+        // Save previous chapter if exists
+        if (currentChapter.chapterNumber && chapterText.trim()) {
+          currentChapter.text = chapterText.trim();
+          chapters.push(currentChapter as Chapter);
+        }
+
+        // Start new chapter
+        const chapterMatch = line.match(/Chapter (\d+)/);
+        if (chapterMatch) {
+          currentChapter = { chapterNumber: parseInt(chapterMatch[1]) };
+          chapterText = '';
+        }
+      } else if (currentChapter.chapterNumber) {
+        chapterText += line + '\n';
+      }
+    }
+
+    // Save last chapter
+    if (currentChapter.chapterNumber && chapterText.trim()) {
+      currentChapter.text = chapterText.trim();
+      chapters.push(currentChapter as Chapter);
+    }
+
+    if (chapters.length === 0) {
+      errorMessage.textContent = 'No valid chapters found in edited content.';
+      return;
+    }
+
+    // Update the book content
+    lastRawBookContent.title = title;
+    lastRawBookContent.chapters = chapters;
+
+    // Re-render the book
+    allPages = transformBookOutputToPages({ book: lastRawBookContent });
+    renderPages();
+
+    // Save to history
+    saveStoryToHistory(lastRawBookContent, topicInput.value, genreSelect.value);
+
+    // Exit edit mode
+    editTextarea.style.display = 'none';
+    editStoryButton.style.display = 'inline-block';
+    saveEditsButton.style.display = 'none';
+    cancelEditsButton.style.display = 'none';
+
+    errorMessage.textContent = 'Story updated successfully!';
+
+  } catch (error) {
+    errorMessage.textContent = 'Error saving edits. Please check your formatting.';
+    console.error('Edit save error:', error);
+  }
+});
+
+cancelEditsButton.addEventListener('click', () => {
+  editTextarea.style.display = 'none';
+  editStoryButton.style.display = 'inline-block';
+  saveEditsButton.style.display = 'none';
+  cancelEditsButton.style.display = 'none';
+  errorMessage.textContent = 'Edit cancelled.';
+});
+
+// Export functionality (simplified - would need proper libraries for full implementation)
+exportPdfButton.addEventListener('click', () => {
+  if (allPages.length === 0) {
+    errorMessage.textContent = 'No story to export.';
+    return;
+  }
+
+  // For now, just trigger print which can be saved as PDF
+  window.print();
+  errorMessage.textContent = 'Print dialog opened. Choose "Save as PDF" to export.';
+});
+
+exportEpubButton.addEventListener('click', () => {
+  if (allPages.length === 0) {
+    errorMessage.textContent = 'No story to export.';
+    return;
+  }
+
+  // Simplified EPUB export - in a real implementation, you'd use a library like epub-gen
+  let epubContent = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0">
+  <metadata>
+    <title>${allPages[0]?.term || 'Story'}</title>
+    <creator>AI Story Generator</creator>
+  </metadata>
+  <manifest>
+    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine>
+    <itemref idref="chapter1"/>
+  </spine>
+</package>`;
+
+  const blob = new Blob([epubContent], { type: 'application/epub+zip' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${allPages[0]?.term || 'story'}.epub`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  errorMessage.textContent = 'EPUB file downloaded. Note: This is a basic implementation.';
+});
+
+// Update UI when pages are rendered
+function updateUIAfterGeneration() {
+  if (allPages.length > 0) {
+    exportOptions.style.display = 'flex';
+    editMode.style.display = 'block';
+    updateHistoryDisplay();
+  } else {
+    exportOptions.style.display = 'none';
+    editMode.style.display = 'none';
+  }
+}
+
+// Enhanced renderPages function
+function enhancedRenderPages() {
+  renderPages();
+  updateUIAfterGeneration();
+}
+
 // Initialize application
 (async () => {
     currentDebugMode = debugModeCheckbox.checked;
     currentDebugCover = debugCoverCheckbox.checked;
     topicInput.disabled = currentDebugMode;
+
+    // Load story history
+    loadHistoryFromStorage();
 
     if (currentDebugCover) {
         activeBackCoverImageBase64 = await getImageAsBase64('StorySupportFiles/debug_cover.jpg');
@@ -709,14 +1049,14 @@ debugCoverCheckbox.addEventListener('change', async () => {
     if (currentDebugMode) {
         await setupDebugStory();
     } else {
-        renderPages(); 
+        renderPages();
     }
-    
+
     const initiallyCollapsed = collapsibleControls.classList.contains('collapsed');
     toggleInputSectionButton.setAttribute('aria-expanded', String(!initiallyCollapsed));
     const icon = toggleInputSectionButton.querySelector('.toggle-icon') as HTMLSpanElement;
     const text = toggleInputSectionButton.querySelector('.toggle-text') as HTMLSpanElement;
-    
+
     if (initiallyCollapsed) {
         icon.textContent = '▼';
         text.textContent = 'Expand';

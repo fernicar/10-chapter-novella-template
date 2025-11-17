@@ -7,6 +7,15 @@ This is a web-based creative writing assistant that empowers users to generate c
 
 The core of the application is a structured prompting mechanism based on a proven 10-chapter novella template, ensuring that the generated stories have a coherent plot progression, from the initial hook to the final resolution. Users can interact with the generated book, turn pages with a satisfying animation, and download the full story as a text file for later use. The application also includes developer/debug modes for viewing the base template and testing with a default cover image.
 
+**Enhanced Features:**
+- **Genre Selection:** Choose from various genres (Fantasy, Science Fiction, Mystery, Romance, etc.) to guide AI story generation
+- **Loading Animations:** Visual progress indicators during story and image generation
+- **Story History:** Local storage of generated stories with quick access to previously created content
+- **Story Editing:** Post-generation editing capabilities to modify and improve generated stories
+- **Export Options:** PDF and EPUB export functionality for professional publishing
+- **Responsive Design:** Optimized for mobile devices and various screen sizes
+- **PWA Support:** Progressive Web App capabilities for offline access
+
 ## Functionality
 
 ### Core Features

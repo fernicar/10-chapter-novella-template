@@ -41,6 +41,21 @@
         </div>
       </div>
       <div id="collapsibleControls" class="collapsible-controls">
+        <select id="genreSelect" class="genre-select" aria-label="Select story genre">
+          <option value="">Select Genre (Optional)</option>
+          <option value="fantasy">Fantasy</option>
+          <option value="science-fiction">Science Fiction</option>
+          <option value="mystery">Mystery</option>
+          <option value="romance">Romance</option>
+          <option value="thriller">Thriller</option>
+          <option value="horror">Horror</option>
+          <option value="historical-fiction">Historical Fiction</option>
+          <option value="adventure">Adventure</option>
+          <option value="drama">Drama</option>
+          <option value="comedy">Comedy</option>
+          <option value="biography">Biography</option>
+          <option value="fairy-tale">Fairy Tale</option>
+        </select>
         <textarea
           id="topicInput"
           aria-labelledby="topicLabel"
@@ -52,6 +67,44 @@
     <div id="errorMessage" class="error-message" aria-live="polite"></div>
     <div id="pagesContainer" class="pages-container" aria-label="Generated pages stack">
       <!-- Pages will be generated here -->
+    </div>
+    <div id="exportOptions" class="export-options" style="display: none;">
+      <button id="exportPdfButton" class="export-btn" aria-label="Export as PDF">
+        📄 PDF
+      </button>
+      <button id="exportEpubButton" class="export-btn epub" aria-label="Export as EPUB">
+        📖 EPUB
+      </button>
+    </div>
+    <div id="storyHistory" class="story-history" style="display: none;">
+      <div class="history-header">
+        <h3 class="history-title">Recent Stories</h3>
+        <button id="clearHistoryButton" class="clear-history-btn" aria-label="Clear story history">Clear All</button>
+      </div>
+      <div id="historyGrid" class="history-grid">
+        <!-- History items will be generated here -->
+      </div>
+    </div>
+    <div id="editMode" class="edit-mode" style="display: none;">
+      <div class="edit-controls">
+        <button id="editStoryButton" class="edit-btn" aria-label="Edit current story">✏️ Edit Story</button>
+        <button id="saveEditsButton" class="edit-btn save" style="display: none;" aria-label="Save story edits">💾 Save</button>
+        <button id="cancelEditsButton" class="edit-btn cancel" style="display: none;" aria-label="Cancel story edits">❌ Cancel</button>
+      </div>
+      <textarea id="editTextarea" class="edit-textarea" style="display: none;" placeholder="Edit your story here..."></textarea>
+    </div>
+  </div>
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Generating story...</div>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+      </div>
+      <div class="loading-subtext" id="loadingSubtext">This may take a few moments</div>
     </div>
   </div>
   <script type="module" src="index.tsx"></script>
