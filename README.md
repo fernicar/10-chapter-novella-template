@@ -9,32 +9,30 @@
 </video>
 
 
-# Run and deploy your AI Studio app
+# AI-Powered 10-Chapter Novella Generator
 
-This contains everything you need to run your app locally.
+A web-based creative writing assistant that empowers users to generate complete 10-chapter novellas from a single topic idea. The application leverages the Google Gemini AI to draft a story and an accompanying cover image, presenting the final output in an interactive, 3D flippable digital book format.
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-   
-# 10-Chapter Novella Template
-
-A web application that helps you generate a novella using a structured 10-chapter template. Powered by Google Gemini AI, it drafts story content and generates a cover image based on your topic.
+The core of the application is a structured prompting mechanism based on a proven 10-chapter novella template, ensuring that the generated stories have a coherent plot progression, from the initial hook to the final resolution. Users can interact with the generated book, turn pages with a satisfying animation, and download the full story as a text file for later use. The application also includes developer/debug modes for viewing the base template and testing with a default cover image.
 
 ---
 
 ## Features
-- **AI-Powered Novella Generation**: Uses Gemini to generate a 10-chapter novella from your topic.
-- **Automatic Cover Creation**: Generates a cover image for your story (or uses a debug cat cover).
-- **Interactive UI**: Easily input your topic, toggle debug/template modes, and preview your novella.
-- **Modern Design**: Responsive, clean interface styled with CSS variables and Google Fonts.
+- **AI Story Generation**: Generate unique 10-chapter novellas from any topic using Google Gemini AI
+- **AI Cover Art Generation**: Create contextually relevant book cover images for each story
+- **Interactive 3D Book Interface**: Flip through pages with realistic 3D turning animations
+- **Text File Download**: Download complete stories (title and all chapters) as .txt files
+- **Collapsible Input UI**: Minimize controls for unobstructed book viewing
+- **Template Viewer Mode**: Debug feature to view the underlying 10-chapter writing template
+- **Debug Cover Mode**: Toggle a default "Cat Cover" image for testing
+- **Genre Selection**: Choose from various genres (Fantasy, Science Fiction, Mystery, Romance, etc.) to guide AI generation
+- **Loading Animations**: Visual progress indicators during story and image generation
+- **Story History**: Local storage of generated stories with quick access to previous content
+- **Story Editing**: Post-generation editing capabilities to modify and improve stories
+- **Export Options**: PDF and EPUB export functionality for professional publishing
+- **Responsive Design**: Optimized for mobile devices and various screen sizes
+- **PWA Support**: Progressive Web App capabilities for offline access
+- **Accessibility**: Full keyboard navigation and screen reader support
 
 ---
 
@@ -42,7 +40,7 @@ A web application that helps you generate a novella using a structured 10-chapte
 - **TypeScript** (React-style JSX, DOM manipulation)
 - **Vite** (build tool)
 - **@google/genai** and **@google/generative-ai** (Gemini API)
-- **CSS** (custom theming)
+- **CSS** (custom theming with Material Design aesthetic)
 
 ---
 
@@ -77,10 +75,14 @@ A web application that helps you generate a novella using a structured 10-chapte
 ---
 
 ## Usage
-- Enter a topic in the input box.
-- Use the checkboxes to toggle "View Template" (debug mode) and "Cat Cover" (use a sample cover image).
+- Enter a topic in the textarea (e.g., "A lonely lighthouse keeper who discovers a message in a bottle").
+- Select a genre to guide the AI story generation.
+- Use the checkboxes to toggle "View Template" (debug mode) and "Cat Cover" (use sample cover image).
 - Click **Generate** to create your novella.
-- Navigate through chapters and view the generated cover.
+- Interact with the 3D book: click pages or use keyboard (Enter/Space) to flip through chapters.
+- Use the **Download** button to save the complete story as a text file.
+- Access story history and editing features for previously generated content.
+- Export stories as PDF or EPUB for publishing.
 
 ---
 
@@ -93,15 +95,17 @@ A web application that helps you generate a novella using a structured 10-chapte
 
 ## Project Structure (root files)
 - `index.html` – Main HTML file, includes import maps and Google Fonts
-- `index.tsx` – Main TypeScript logic for UI and AI integration
-- `index.css` – App styling and theming
+- `index.tsx` – Main TypeScript logic for UI, AI integration, and book interactions
+- `index.css` – App styling and theming with Material Design
 - `vite.config.ts` – Vite configuration (API key injection, path aliases)
 - `tsconfig.json` – TypeScript configuration
 - `package.json` – Project metadata and dependencies
 - `metadata.json` – App description and metadata
+- `StorySupportFiles/` – Contains template files and debug assets
+- `videos/` – Demo videos showcasing the application
 
 ---
 
 ## License
 
-This project is licensed under the [Apache-2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
