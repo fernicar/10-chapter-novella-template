@@ -191,14 +191,11 @@ function updateHistoryDisplay() {
 function loadStoryFromHistory(item: StoryHistoryItem) {
   lastRawBookContent = JSON.parse(JSON.stringify(item.content));
   allPages = transformBookOutputToPages({ book: item.content });
-  renderPages();
+  enhancedRenderPages();
 
   // Update UI
   topicInput.value = item.topic;
   genreSelect.value = item.genre;
-  exportOptions.style.display = 'flex';
-  editMode.style.display = 'block';
-  storyHistory.style.display = storyHistoryItems.length > 1 ? 'block' : 'none';
 
   errorMessage.textContent = `Loaded story: ${item.title}`;
 }
@@ -1065,6 +1062,7 @@ function enhancedRenderPages() {
 
     // Load story history
     loadHistoryFromStorage();
+    updateHistoryDisplay();
 
     if (currentDebugCover) {
         activeBackCoverImageBase64 = await getImageAsBase64('StorySupportFiles/debug_cover.jpg');
